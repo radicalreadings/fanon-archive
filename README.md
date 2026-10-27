@@ -23,17 +23,27 @@ npm run dev
 
 ## Structure
 
-One Vue page per book — no router, no theme toggle, no landing page, no shared data schema. Just write the page:
+One Vue page per book, each its own HTML entry (Vite multi-page build) — no router, no theme toggle, no landing page, no shared data schema. Just write the page:
 
-- `src/pages/WretchedOfTheEarth.vue` — the book's content, written directly in the page (title, author, links, etc. as plain values), composed from the shared components in `src/components/session/` (`SessionHero`, `MeetingDetailsCard`, `BookInfoCard`, `SupplementalLinksList`). Each of those takes plain individual props (`title`, `date`, `location`, ...) — there's no central "book" type they all have to conform to, so a page only passes what it actually has.
-- `src/App.vue` — the app shell (header/footer) that renders that one page
+| Book | HTML entry | Entry script | Page | URL |
+| --- | --- | --- | --- | --- |
+| The Wretched of the Earth | `fanon/index.html` | `src/entries/wretched.ts` | `src/pages/WretchedOfTheEarth.vue` | `/fanon/` |
+| Settlers | `settlers/index.html` | `src/entries/settlers.ts` | `src/pages/Settlers.vue` | `/settlers/` |
 
-Cover images go in `public/covers/`; pass the path (relative to that folder, e.g. `"wretched-of-the-earth.jpg"`) as a book's `coverImage` prop.
+- `src/pages/*.vue` — the book's content, written directly in the page, using the shared `CoverImage` and `QrCode` components
+- `src/App.vue` — the app shell (header/footer); renders whichever page it's given
+- `src/mountPage.ts` — creates the app for a given page; each entry script just calls it
+- `index.html` — the site root; just redirects to the current book's page
 
-## Adding a second book
+Cover images go in `public/covers/<book>/`, listed in the page's covers array (e.g. `'covers/wote/....jpg'`). Favicons go in `public/favi/`, referenced from that book's HTML entry.
 
-1. Copy `src/pages/WretchedOfTheEarth.vue` to a new page, e.g. `src/pages/NextBook.vue`, and fill in its own values.
-2. Decide how the two pages coexist (a simple nav link, routes via `vue-router`, or separate static HTML entry points via Vite's multi-page build are all reasonable — worth deciding once there's an actual second book).
+## Adding another book
+
+1. Copy an existing page in `src/pages/` and fill in its own values, including `PAGE_URL` (used for the QR code).
+2. Add an entry script in `src/entries/` that calls `mountPage` with the new page.
+3. Add `<book>/index.html` (copy `settlers/index.html`), pointing its `<script>` at the new entry script and setting its own title/favicon.
+4. Register the HTML file under `build.rollupOptions.input` in `vite.config.ts`.
+5. Point the redirect in the root `index.html` at the new book's URL.
 
 ## Deployment
 
@@ -41,4 +51,4 @@ Pushing to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy
 
 For this to work, the repo's **Settings → Pages → Build and deployment → Source** must be set to **GitHub Actions**.
 
-The site is served at `https://radicalreadings.github.io/fanon/`. If this repo ever moves to a custom domain, update `base` in `vite.config.ts` accordingly.
+The site is served at the root of `https://radicalreadings.github.io/`, which requires this repo to be named `radicalreadings.github.io` (a GitHub Pages user/org site). Each book lives at its own path (`/fanon/`, `/settlers/`); `/fanon/` is kept as-is so QR codes already printed for Wretched keep working.

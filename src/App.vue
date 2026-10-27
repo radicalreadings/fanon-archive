@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import WretchedOfTheEarth from '@/pages/WretchedOfTheEarth.vue'
+import type { Component } from 'vue'
+
+defineProps<{
+  page: Component
+}>()
 </script>
 
 <template>
@@ -9,7 +13,7 @@ import WretchedOfTheEarth from '@/pages/WretchedOfTheEarth.vue'
     </v-app-bar>
 
     <v-main>
-      <WretchedOfTheEarth />
+      <component :is="page" />
     </v-main>
 
     <v-footer class="app-footer d-flex justify-center py-4">
